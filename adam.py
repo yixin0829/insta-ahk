@@ -33,10 +33,7 @@ comments = ['Love the colour 0.0! @{}',
 
 # OOP Review:
 # class is a blueprint and an instance is an ovject that is built from a class and contains real data
-class Adam:
-    ## class attributes (same for all the class)
-    ahk = AHK()
-
+class Adam():
     # note: every function inside a class is called a "instance method"
     def __init__(self, likes:int = 20, interact:bool = False, random_offset:bool = True):
         """
@@ -45,6 +42,7 @@ class Adam:
             interact: set to False by default. Will randomly interact with user profile if it's set to True
             random_offset: randomly deflate likes within its 70% - 100%
         """
+        self.ahk = AHK()
         if random_offset:
             self.likes = int(likes * np.random.uniform(low=0.7, high=1.0))
         else:
@@ -71,10 +69,9 @@ class Adam:
         e_time = round(time() - self.start_time, 2)
 
         # print out a summary of the current running state in console
-        summary = f"""elapsed time: {e_time}s
-        total likes: {self.liked}
-        total skipped: {self.skipped}
-        engagement rate: {engagement}"""
+        summary = f"""
+        elapsed time: {e_time}s | total likes: {self.likes}
+        current likes: {self.liked} | current skipped: {self.skipped} | engagement rate: {engagement}"""
 
         return summary
     
@@ -82,24 +79,30 @@ class Adam:
         """
         like a photo and go to the next one with prob% chance
         """
-        if self.liked >= self.likes:
-            self.terminate = True
-            return
-
         if random.randrange(0, 100) <= prob:
             # double click to like
-            ahk.mouse_move(2000, 1000, speed=10, blocking=True)
-            ahk.double_click()
+            self.ahk.mouse_move(2000, 1000, speed=10, blocking=True)
+            self.ahk.double_click()
             self.rsleep(4)
 
             # certain chance to interact with user profile
 
             # certain chance to comment
 
-            # click next arrow icon
-            ahk.mouse_move(2675, 943, speed=10, blocking=True)
-            ahk.click()
-            self.rsleep(4)
+            # update the tracker
+            self.liked +=1
+        else:
+            self.skipped +=1
+
+        if self.liked >= self.likes:
+            self.terminate = True
+            return
+
+        # click next arrow icon
+        self.ahk.mouse_move(2675, 943, speed=10, blocking=True)
+        self.ahk.click()
+        self.rsleep(4)
+
 
     def interact(self, prob: float):
         pass
@@ -109,16 +112,16 @@ class Adam:
 
     def rsleep(self, sec:int):
         """randomly sleep b/w 70% - 100% seconds"""
-        sleep(sec * np.random.uniform(low=0.7, high=1.0))
+        sleep(sec * np.random.uniform(low=0.5, high=1.5))
 
 
 if __name__ == '__main__':
-    adam = Adam(likes=20, interact=False, random_offset=True)
+    adam = Adam(likes=5, interact=False, random_offset=True)
 
     # main code run()
     while not adam.terminate:
-        adam.like(random.randrange(50, 100)) # randomly generate probability from 50% to 100%
         print(adam) # log progress
+        adam.like(random.randrange(40, 80)) # randomly generate probability from 50% to 100%
         
     
     
