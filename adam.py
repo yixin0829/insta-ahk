@@ -12,9 +12,7 @@ import random
 comments = [u'Love the colour 0.0!',
         u'Amazing work haha!',
         u'Amazing work!',
-        u'Amazing work!',
         u'Awesome post :))',
-        u'Awesome post!',
         u'Awesome post!',
         u'Looks awesome!',
         u'LOL This is inspiring!',
@@ -29,17 +27,16 @@ comments = [u'Love the colour 0.0!',
         u'ON FIRE! 100/100!',
         u'Lovely!',
         u'great content!',
-        u'great content!',
         u'Great content!!',
-        u'awesome content!!! :thumbsup:',
-        u'Awesome content!! :thumbsup:',
-        u'100/100 love it :thumbsup:!',
-        u'This is just incredible :heart_eyes:',
-        u'amazing shot! :heart_eyes:']
+        u'awesome content!!!',
+        u'Awesome content!!',
+        u'100/100 love it!',
+        u'This is just incredible :^)',
+        u'amazing shot!']
 
 # the screen coordinates after
 user_profile_coords=[
-    (1400, 400),
+    # (1400, 400), # comment out the 1st one which will be liked already
     (1400, 800),
     (1400, 1300),
     (1400, 1700),
@@ -59,21 +56,21 @@ ahk = AHK()
 # class is a blueprint and an instance is an ovject that is built from a class and contains real data
 class Adam():
     # note: every function inside a class is called a "instance method"
-    def __init__(self, likes:int = 20, random_offset:bool = True):
+    def __init__(self, likes:int = 20, random_offset_yn:bool = True):
         """
         Instance Attributes:
             likes: total likes you want to engage including profile interaction if it's set to True
             interact: set to False by default. Will randomly interact with user profile if it's set to True
             comment: set to False by default. Will randomly comment liked posts if it's set to True
-            random_offset: randomly deflate likes within its 70% - 100%
+            random_offset_yn: randomly deflate likes within its 60% - 100%
         """
-        if random_offset:
-            self.likes = int(likes * np.random.uniform(low=0.7, high=1.0))
+        if random_offset_yn:
+            self.likes = int(likes * np.random.uniform(low=0.6, high=1.0))
         else:
             self.likes = likes
-        self.interact = False
-        self.comment = False
-        self.random_offset = random_offset
+        self.interact_yn = False
+        self.comment_yn = False
+        self.random_offset_yn = random_offset_yn
 
         # internal trackers
         self.liked = 0
@@ -98,11 +95,11 @@ class Adam():
         except ZeroDivisionError:
             engagement = -1
 
-        e_time = round(time() - self.start_time, 2)
+        e_time = round(time() - self.start_time, 0)
 
         # print out a summary of the current running state in console
         summary = f"""
-        elapsed time: {e_time}s | total likes: {self.likes} | engagement rate: {engagement}
+        e_time: {e_time}s | goal: {self.likes} likes | engagement: {engagement}
         current comments: {self.commented} | current interactions: {self.interacted}
         current likes: {self.liked} | current skips: {self.skipped}"""
 
@@ -116,26 +113,26 @@ class Adam():
         except ZeroDivisionError:
             engagement = -1
 
-        e_time = round(time() - self.start_time, 2)
+        e_time = round(time() - self.start_time, 0)
 
         # print out a summary of the current running state in console
         summary = f"""
-        elapsed time: {e_time}s | total likes: {self.likes} | engagement rate: {engagement}
+        e_time: {e_time}s | goal: {self.likes} likes | engagement: {engagement}
         current comments: {self.commented} | current interactions: {self.interacted}
         current likes: {self.liked} | current skips: {self.skipped}"""
 
         print(summary)
 
     # Utility methods for setting variables
-    def set_like(low:int, high:int):
+    def set_like(self, low:int, high:int):
         self.like_prob = (low, high)
         
-    def set_interact(toggle:bool, low:int, high:int):
-        self.interact = toggle
+    def set_interact(self, toggle:bool, low:int, high:int):
+        self.interact_yn = toggle
         self.interact_prob = (low, high)
 
-    def set_comment(toggle:bool, low:int, high:int):
-        self.comment = toggle
+    def set_comment(self, toggle:bool, low:int, high:int):
+        self.comment_yn = toggle
         self.comment_prob = (low, high)
 
     
@@ -164,12 +161,15 @@ class Adam():
 
         if self.liked >= self.likes:
             self.terminate = True
+            self.summary()
+            print('Reached goal. Terminating ...')
             return
 
         # click next arrow icon
         ahk.mouse_move(2675, 943, speed=10, blocking=True)
         ahk.click()
-        self.rsleep(4)
+        self.summary()
+        self.rsleep(6)
 
         # Personal preference: bare return
         return # explicit approach: return None
@@ -198,7 +198,10 @@ class Adam():
             self.rsleep(3)
 
             # press page down to get the first 12 posts
+            ahk.mouse_move(2600, 600, speed=10, blocking=True)
+            ahk.click()
             ahk.key_press('pgdn')
+            self.rsleep(1)
 
             # randomly like low-high posts
             interact_goal = random.randint(low, high)
@@ -216,14 +219,16 @@ class Adam():
 
                 # close tab
                 ahk.mouse_move(2666, 228, speed=10, blocking=True)
-                ahk.double_click()
+                ahk.click()
                 self.rsleep(2)
 
-            # when finishing interacting, close the tab by pressing ctrl + w
-            ahk.key_down('control')
-            ahk.key_press('w')
+            # when finishing interacting, close the tab by pressing ctrl + w (bug exists)
+            ahk.mouse_move(2117, 60, speed=10, blocking=True)
+            ahk.click()
+            self.rsleep(1)
 
             self.interacted += 1
+            self.liked += interact_goal
             
         return # return to like()
 
@@ -238,7 +243,7 @@ class Adam():
             self.rsleep(1)
 
             # randomly commenting + random sleep to simulate typing
-            ahk.type(comments[randint(0, len(comments) - 1)])
+            ahk.type(comments[random.randint(0, len(comments) - 1)])
             self.rsleep(6)
 
             # press enter to send
@@ -251,22 +256,30 @@ class Adam():
 
 
     def rsleep(self, sec:int):
-        """randomly sleep b/w 70% - 100% seconds"""
+        """randomly sleep b/w 50% - 150% seconds"""
         sleep(sec * np.random.uniform(low=0.5, high=1.5))
         # implicit return: this method acctually returns None
 
 
     def run(self):
         while not self.terminate:
-            self.summary()
             self.like() # internal randomization
+        # add random log in + random Homepage interactions
+
+        # add closing the window after finish the session
+        win = ahk.active_window
+        win.kill()
+
         return
 
 
 if __name__ == '__main__':
-    adam = Adam(likes=5, random_offset=True)
+    adam = Adam(likes=15, random_offset_yn=True)
+    adam.set_like(50, 80)
     adam.set_interact(True, 10, 20)
-    adam.set_comment(True, 5, 10)
+    adam.set_interact(True, 100, 100)
+    adam.set_comment(True, 1, 1)
+    # adam.set_comment(True, 100, 100)
     adam.run()
 
         
