@@ -34,6 +34,11 @@ comments = [u'Love the colour 0.0!',
         u'This is just incredible :^)',
         u'amazing shot!']
 
+hashtags = ['#landscapepainting',
+        '#landscapelovers',
+        '#landscapephotography',
+        '#artstation']
+
 # the screen coordinates after
 user_profile_coords=[
     # (1400, 400), # comment out the 1st one which will be liked already
@@ -49,6 +54,28 @@ user_profile_coords=[
     (2400, 1300),
     (2400, 1700),
 ]
+
+# browse result page top 6 coords
+brp_coords = [
+    (1400, 1000),
+    (1400, 1700),
+    (1900, 1000),
+    (1900, 1700),
+    (2400, 1000),
+    (2400, 1700),
+]
+
+# other coordinates for the script
+image_coord = (1500, 1000)
+comment_text_field_coord = (2152, 1356)
+story_icon_coord = (1430, 450)
+next_icon_coord = (2675, 943)
+user_name_coord = (2010, 561)
+new_tab_coord = (1900, 50)
+rand_profile_coord = (2600, 600)
+ins_post_cross_coord = (2666, 228)
+chrome_tab_cross_coord = (2117, 60)
+search_field_coord = ()
 
 ahk = AHK()
 
@@ -81,7 +108,7 @@ class Adam():
         self.interacting = False
         self.terminate = False
 
-        # randomization (default interval that reset everytime the function is called)
+        # default randomization (default interval that reset everytime the function is called)
         self.like_prob = (10, 80)
         self.interact_prob = (10, 20)
         self.comment_prob = (5, 10)
@@ -144,7 +171,7 @@ class Adam():
         # %prob chance excute the function
         if random.randrange(1, 100) <= prob:
             # double click to like
-            ahk.mouse_move(1500, 1000, speed=10, blocking=True)
+            ahk.mouse_move(*image_coord, speed=10, blocking=True)
             ahk.double_click()
             self.rsleep(4)
 
@@ -166,7 +193,7 @@ class Adam():
             return
 
         # click next arrow icon
-        ahk.mouse_move(2675, 943, speed=10, blocking=True)
+        ahk.mouse_move(*next_icon_coord, speed=10, blocking=True)
         ahk.click()
         self.summary()
         self.rsleep(6)
@@ -186,20 +213,20 @@ class Adam():
         # %prob chance excute the function
         if random.randint(1,100) <= prob:
             # ctrl + click on the user profile link in a new tab (important otherwise hard to return back to initial carousel)
-            ahk.mouse_move(2010, 561, speed=10, blocking=True)
+            ahk.mouse_move(*user_name_coord, speed=10, blocking=True)
             ahk.key_down('control') # press down ctrl
             ahk.click() # click
             ahk.key_up('control') # release the key
             self.rsleep(3)
 
             # click into the newly opened tab
-            ahk.mouse_move(1900, 50, speed=10, blocking=True)
+            ahk.mouse_move(*new_tab_coord, speed=10, blocking=True)
             ahk.click()
             self.rsleep(3)
 
             # press page down to get the first 12 posts
-            ahk.mouse_move(2600, 600, speed=10, blocking=True)
-            ahk.click()
+            # ahk.mouse_move(*rand_profile_coord, speed=10, blocking=True)
+            # ahk.click()
             ahk.key_press('pgdn')
             self.rsleep(1)
 
@@ -213,17 +240,17 @@ class Adam():
                 self.rsleep(3)
 
                 # double click to like
-                ahk.mouse_move(1500, 1000, speed=10, blocking=True)
+                ahk.mouse_move(*image_coord, speed=10, blocking=True)
                 ahk.double_click()
                 self.rsleep(4)
 
-                # close tab
-                ahk.mouse_move(2666, 228, speed=10, blocking=True)
+                # close instagram post tab
+                ahk.mouse_move(*ins_post_cross_coord, speed=10, blocking=True)
                 ahk.click()
                 self.rsleep(2)
 
             # when finishing interacting, close the tab by pressing ctrl + w (bug exists)
-            ahk.mouse_move(2117, 60, speed=10, blocking=True)
+            ahk.mouse_move(*chrome_tab_cross_coord, speed=10, blocking=True)
             ahk.click()
             self.rsleep(1)
 
@@ -238,7 +265,7 @@ class Adam():
         # %prob chance excute the function
         if random.randint(1, 100) <= prob:
             # click on the comment entry
-            ahk.mouse_move(2152, 1356, speed=10, blocking=True)
+            ahk.mouse_move(*comment_text_field_coord, speed=10, blocking=True)
             ahk.click()
             self.rsleep(1)
 
@@ -262,11 +289,53 @@ class Adam():
 
 
     def run(self):
+        ## logging into instagram
+        # click on the chrome icon
+        # ahk.mouse_move(2152, 1356, speed=10, blocking=True)
+        # ahk.click()
+        # self.rsleep(1)
+
+        ## random Homepage interactions
+        # check out some stories (click on the 1st story and randomly browse x stories)
+        ahk.mouse_move(*story_icon_coord, speed=10, blocking=True)
+        ahk.click()
+        self.rsleep(3)
+        for i in range(random.randint(1, 12)):
+            ahk.key_press('left')
+            self.rsleep(4)
+
+        # close the instagram story
+        ahk.mouse_move(*ins_post_cross_coord, speed=10, blocking=True)
+        ahk.click()
+        self.rsleep(2)
+
+        # click on the search field
+        ahk.mouse_move(*search_field_coord, speed=10, blocking=True)
+        ahk.click()
+        self.rsleep(2)
+
+        # randomly picked one hashtag and search it
+        hashtag = hashtags[random.randint(0, len(hashtags) - 1)]
+        print(f'chosen hashtag: {hashtag}')
+        ahk.type(hashtag)
+        self.rsleep(8)
+
+        # press enter to search
+        ahk.key_press('enter')
+        self.rsleep(4)
+
+        # Randomly click one of the first 6 posts in "Top posts" to start
+        brp_coord = brp_coords[random.randint(0, len(brp_coords) - 1)]
+        ahk.mouse_move(*brp_coord, speed=10, blocking=True)
+        ahk.click()
+        self.rsleep(3)
+
+        ## main code for engaging users
         while not self.terminate:
             self.like() # internal randomization
-        # add random log in + random Homepage interactions
+        self.rsleep(10)
 
-        # add closing the window after finish the session
+        ## add closing the window after finish the session
         win = ahk.active_window
         win.kill()
 
@@ -277,7 +346,7 @@ if __name__ == '__main__':
     adam = Adam(likes=15, random_offset_yn=True)
     adam.set_like(50, 80)
     adam.set_interact(True, 10, 20)
-    adam.set_interact(True, 100, 100)
+    # adam.set_interact(True, 100, 100)
     adam.set_comment(True, 1, 1)
     # adam.set_comment(True, 100, 100)
     adam.run()
