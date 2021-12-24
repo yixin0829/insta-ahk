@@ -5,6 +5,7 @@ How to use:
 """
 from ahk import AHK
 from time import time, sleep
+import sched
 import numpy as np
 import random 
 
@@ -76,6 +77,7 @@ new_tab_coord = (1900, 50)
 rand_profile_coord = (2600, 600)
 ins_post_cross_coord = (2666, 228)
 chrome_tab_cross_coord = (2117, 60)
+chrome_dsktop_icon_coord = (1120, 1780)
 search_field_coord = (1660, 220)
 first_hashtag_coord = (1800, 375)
 
@@ -284,26 +286,23 @@ class Adam():
 
         return # return to like()
 
-
-    def rsleep(self, sec:int):
-        """randomly sleep b/w 50% - 150% seconds"""
-        sleep(sec * np.random.uniform(low=0.5, high=1.5))
-        # implicit return: this method acctually returns None
-
-
-    def run(self):
-        ## logging into instagram
+    def login(self):
         # click on the chrome icon
-        # ahk.mouse_move(2152, 1356, speed=10, blocking=True)
-        # ahk.click()
-        # self.rsleep(1)
+        ahk.mouse_move(*chrome_dsktop_icon_coord, speed=10, blocking=True)
+        ahk.click()
+        self.rsleep(6)
 
-        ## random Homepage interactions
+        # Search "Instagram" and hit enter
+        ahk.type("instagram")
+        self.rsleep(4)
+        ahk.key_press("enter")
+
+    def r_hp_interact(self):
         # check out some stories (click on the 1st story and randomly browse x stories)
         if self.hp_interaction:
             ahk.mouse_move(*story_icon_coord, speed=10, blocking=True)
             ahk.click()
-            self.rsleep(3)
+            self.rsleep(10)
             for i in range(random.randint(1, 12)):
                 ahk.key_press('right')
                 self.rsleep(4)
@@ -324,9 +323,10 @@ class Adam():
             ahk.type(hashtag)
             self.rsleep(8)
 
-            # press enter to search
-            ahk.key_press('enter')
-            self.rsleep(4)
+            # click on the 1st hashtag showed up
+            ahk.mouse_move(*first_hashtag_coord, speed=10, blocking=True)
+            ahk.click()
+            self.rsleep(30)
 
             # Randomly click one of the first 6 posts in "Top posts" to start
             brp_coord = brp_coords[random.randint(0, len(brp_coords) - 1)]
@@ -334,10 +334,24 @@ class Adam():
             ahk.click()
             self.rsleep(3)
 
+
+    def rsleep(self, sec:int):
+        """randomly sleep b/w 50% - 150% seconds"""
+        sleep(sec * np.random.uniform(low=0.5, high=1.5))
+        # implicit return: this method acctually returns None
+
+
+    def run(self):
+        ## logging into instagram
+        self.login()
+
+        ## random Homepage interactions
+        self.r_hp_interact()
+
         ## main code for engaging users
         while not self.terminate:
             self.like() # internal randomization
-        self.rsleep(10)
+        self.rsleep(20)
 
         ## add closing the window after finish the session
         win = ahk.active_window
@@ -347,13 +361,20 @@ class Adam():
 
 
 if __name__ == '__main__':
-    adam = Adam(likes=25, random_offset_yn=True, hp_interaction=False)
+    adam = Adam(likes=25, random_offset_yn=True, hp_interaction=True)
     adam.set_like(50, 80)
     adam.set_interact(True, 10, 20)
+    adam.set_comment(True, 0, 0)
     # adam.set_interact(True, 100, 100)
-    adam.set_comment(True, 1, 1)
     # adam.set_comment(True, 100, 100)
+
+    ## schedule to run with random 1-2h time interval
     adam.run()
+    s = sched.scheduler(time, sleep)
+    s.enter(np.random.uniform(low=0.05, high=0.1) * 60 * 60, 1, adam.run)
+    # s.enter(np.random.uniform(low=1, high=2) * 60 * 60, 1, adam.run)
+    s.run()
+    
 
         
     
