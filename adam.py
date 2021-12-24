@@ -5,6 +5,7 @@ How to use:
 """
 from ahk import AHK
 from time import time, sleep
+from datetime import datetime
 import sched
 import numpy as np
 import random 
@@ -104,7 +105,12 @@ class Adam():
         self.random_offset_yn = random_offset_yn
         self.hp_interaction = hp_interaction
 
-        # internal trackers
+        # global internal trackers
+        self.total_liked = 0
+        self.total_skipped = 0
+        self.total_interacted = 0
+
+        # internal trackers for current run (reset every run)
         self.liked = 0
         self.skipped = 0
         self.interacted = 0
@@ -296,6 +302,7 @@ class Adam():
         ahk.type("instagram")
         self.rsleep(4)
         ahk.key_press("enter")
+        self.rsleep(15)
 
     def r_hp_interact(self):
         # check out some stories (click on the 1st story and randomly browse x stories)
@@ -340,8 +347,32 @@ class Adam():
         sleep(sec * np.random.uniform(low=0.5, high=1.5))
         # implicit return: this method acctually returns None
 
+    def reset(self):
+        # update global internal trackers
+        self.total_liked += self.liked
+        self.total_skipped += self.skipped
+        self.total_interacted += self.interacted
 
-    def run(self):
+        # internal trackers for current run (reset every run)
+        self.liked = 0
+        self.skipped = 0
+        self.interacted = 0
+        self.commented = 0
+        self.start_time = time()
+        self.interacting = False
+        self.terminate = False
+
+
+    def run(self, current):
+        ## Progress log
+        # get local current time
+        now = datetime.now()
+        current_time = now.strftime("%H:%M:%S")
+        print(f'===============================================\nCurrent time: {current_time} | Loop: {current} | Total Liked: {self.total_liked} | Total Skipped: {self.total_skipped} | Total Interacted: {self.total_interacted}')
+
+        ## reset trackers
+        self.reset()
+
         ## logging into instagram
         self.login()
 
@@ -369,10 +400,12 @@ if __name__ == '__main__':
     # adam.set_comment(True, 100, 100)
 
     ## schedule to run with random 1-2h time interval
-    adam.run()
     s = sched.scheduler(time, sleep)
-    s.enter(np.random.uniform(low=0.05, high=0.1) * 60 * 60, 1, adam.run)
-    # s.enter(np.random.uniform(low=1, high=2) * 60 * 60, 1, adam.run)
+    s.enter(0, 1, adam.run, argument=(1,))
+    # randomly scheduled to run x - y times
+    for i in range(random.randint(3,5)):
+        s.enter(np.random.uniform(low=1, high=2) * 60 * 60, 1, adam.run, argument=(i+2,))
+    
     s.run()
     
 
