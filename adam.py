@@ -67,6 +67,7 @@ brp_coords = [
 
 # other coordinates for the script
 image_coord = (1500, 1000)
+like_coord = (1850, 1130)
 comment_text_field_coord = (2152, 1356)
 story_icon_coord = (1430, 450)
 next_icon_coord = (2675, 943)
@@ -75,7 +76,8 @@ new_tab_coord = (1900, 50)
 rand_profile_coord = (2600, 600)
 ins_post_cross_coord = (2666, 228)
 chrome_tab_cross_coord = (2117, 60)
-search_field_coord = ()
+search_field_coord = (1660, 220)
+first_hashtag_coord = (1800, 375)
 
 ahk = AHK()
 
@@ -83,7 +85,7 @@ ahk = AHK()
 # class is a blueprint and an instance is an ovject that is built from a class and contains real data
 class Adam():
     # note: every function inside a class is called a "instance method"
-    def __init__(self, likes:int = 20, random_offset_yn:bool = True):
+    def __init__(self, likes:int = 20, random_offset_yn:bool = True, hp_interaction:bool = False):
         """
         Instance Attributes:
             likes: total likes you want to engage including profile interaction if it's set to True
@@ -98,6 +100,7 @@ class Adam():
         self.interact_yn = False
         self.comment_yn = False
         self.random_offset_yn = random_offset_yn
+        self.hp_interaction = hp_interaction
 
         # internal trackers
         self.liked = 0
@@ -171,8 +174,8 @@ class Adam():
         # %prob chance excute the function
         if random.randrange(1, 100) <= prob:
             # double click to like
-            ahk.mouse_move(*image_coord, speed=10, blocking=True)
-            ahk.double_click()
+            ahk.mouse_move(*like_coord, speed=10, blocking=True)
+            ahk.click()
             self.rsleep(4)
 
             # certain chance to comment
@@ -196,7 +199,7 @@ class Adam():
         ahk.mouse_move(*next_icon_coord, speed=10, blocking=True)
         ahk.click()
         self.summary()
-        self.rsleep(6)
+        self.rsleep(8)
 
         # Personal preference: bare return
         return # explicit approach: return None
@@ -217,7 +220,7 @@ class Adam():
             ahk.key_down('control') # press down ctrl
             ahk.click() # click
             ahk.key_up('control') # release the key
-            self.rsleep(3)
+            self.rsleep(20)
 
             # click into the newly opened tab
             ahk.mouse_move(*new_tab_coord, speed=10, blocking=True)
@@ -240,8 +243,8 @@ class Adam():
                 self.rsleep(3)
 
                 # double click to like
-                ahk.mouse_move(*image_coord, speed=10, blocking=True)
-                ahk.double_click()
+                ahk.mouse_move(*like_coord, speed=10, blocking=True)
+                ahk.click()
                 self.rsleep(4)
 
                 # close instagram post tab
@@ -297,38 +300,39 @@ class Adam():
 
         ## random Homepage interactions
         # check out some stories (click on the 1st story and randomly browse x stories)
-        ahk.mouse_move(*story_icon_coord, speed=10, blocking=True)
-        ahk.click()
-        self.rsleep(3)
-        for i in range(random.randint(1, 12)):
-            ahk.key_press('left')
+        if self.hp_interaction:
+            ahk.mouse_move(*story_icon_coord, speed=10, blocking=True)
+            ahk.click()
+            self.rsleep(3)
+            for i in range(random.randint(1, 12)):
+                ahk.key_press('right')
+                self.rsleep(4)
+
+            # close the instagram story
+            ahk.mouse_move(*ins_post_cross_coord, speed=10, blocking=True)
+            ahk.click()
+            self.rsleep(2)
+
+            # click on the search field
+            ahk.mouse_move(*search_field_coord, speed=10, blocking=True)
+            ahk.click()
+            self.rsleep(2)
+
+            # randomly picked one hashtag and search it
+            hashtag = hashtags[random.randint(0, len(hashtags) - 1)]
+            print(f'chosen hashtag: {hashtag}')
+            ahk.type(hashtag)
+            self.rsleep(8)
+
+            # press enter to search
+            ahk.key_press('enter')
             self.rsleep(4)
 
-        # close the instagram story
-        ahk.mouse_move(*ins_post_cross_coord, speed=10, blocking=True)
-        ahk.click()
-        self.rsleep(2)
-
-        # click on the search field
-        ahk.mouse_move(*search_field_coord, speed=10, blocking=True)
-        ahk.click()
-        self.rsleep(2)
-
-        # randomly picked one hashtag and search it
-        hashtag = hashtags[random.randint(0, len(hashtags) - 1)]
-        print(f'chosen hashtag: {hashtag}')
-        ahk.type(hashtag)
-        self.rsleep(8)
-
-        # press enter to search
-        ahk.key_press('enter')
-        self.rsleep(4)
-
-        # Randomly click one of the first 6 posts in "Top posts" to start
-        brp_coord = brp_coords[random.randint(0, len(brp_coords) - 1)]
-        ahk.mouse_move(*brp_coord, speed=10, blocking=True)
-        ahk.click()
-        self.rsleep(3)
+            # Randomly click one of the first 6 posts in "Top posts" to start
+            brp_coord = brp_coords[random.randint(0, len(brp_coords) - 1)]
+            ahk.mouse_move(*brp_coord, speed=10, blocking=True)
+            ahk.click()
+            self.rsleep(3)
 
         ## main code for engaging users
         while not self.terminate:
@@ -343,7 +347,7 @@ class Adam():
 
 
 if __name__ == '__main__':
-    adam = Adam(likes=15, random_offset_yn=True)
+    adam = Adam(likes=25, random_offset_yn=True, hp_interaction=False)
     adam.set_like(50, 80)
     adam.set_interact(True, 10, 20)
     # adam.set_interact(True, 100, 100)
