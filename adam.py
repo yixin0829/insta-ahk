@@ -348,11 +348,6 @@ class Adam():
         # implicit return: this method acctually returns None
 
     def reset(self):
-        # update global internal trackers
-        self.total_liked += self.liked
-        self.total_skipped += self.skipped
-        self.total_interacted += self.interacted
-
         # internal trackers for current run (reset every run)
         self.liked = 0
         self.skipped = 0
@@ -370,9 +365,6 @@ class Adam():
         current_time = now.strftime("%H:%M:%S")
         print(f'===============================================\nCurrent time: {current_time} | Loop: {current} | Total Liked: {self.total_liked} | Total Skipped: {self.total_skipped} | Total Interacted: {self.total_interacted}')
 
-        ## reset trackers
-        self.reset()
-
         ## logging into instagram
         self.login()
 
@@ -383,6 +375,14 @@ class Adam():
         while not self.terminate:
             self.like() # internal randomization
         self.rsleep(20)
+
+        # update global internal trackers
+        self.total_liked += self.liked
+        self.total_skipped += self.skipped
+        self.total_interacted += self.interacted
+
+        ## reset trackers for the next run
+        self.reset()
 
         ## add closing the window after finish the session
         win = ahk.active_window
@@ -396,15 +396,19 @@ if __name__ == '__main__':
     adam.set_like(50, 80)
     adam.set_interact(True, 10, 20)
     adam.set_comment(True, 0, 0)
-    # adam.set_interact(True, 100, 100)
-    # adam.set_comment(True, 100, 100)
+    # adam.set_interact(True, 100, 100) # TESTING
+    # adam.set_comment(True, 100, 100) # TESTING
 
     ## schedule to run with random 1-2h time interval
     s = sched.scheduler(time, sleep)
     s.enter(0, 1, adam.run, argument=(1,))
+    print(f'loop1: scheduling run in 0 hours from now')
     # randomly scheduled to run x - y times
     for i in range(random.randint(3,5)):
-        s.enter(np.random.uniform(low=1, high=2) * 60 * 60, 1, adam.run, argument=(i+2,))
+        offset = np.random.uniform(low=0, high=1)
+        delay = i+1+offset 
+        print(f'loop{i+2}: scheduling run in {delay} hours from now')
+        s.enter(delay * 60 * 60, 1, adam.run, argument=(i+2,))
     
     s.run()
     
