@@ -6,40 +6,16 @@ How to use:
 from ahk import AHK
 from time import time, sleep
 from datetime import datetime
+from comments import comments
 import sched
 import numpy as np
 import random 
 
 ## global variables
-comments = [u'Love the colour 0.0!',
-        u'Amazing work haha!',
-        u'Amazing work!',
-        u'Awesome post :))',
-        u'Awesome post!',
-        u'Looks awesome!',
-        u'LOL This is inspiring!',
-        u'Honestly this is amazing',
-        u'please keep it up!',
-        u'Omgg so gorgeous!!',
-        u'THIS\'S SO AMAZING LOVE IT!',
-        u'absolutely stunning',
-        u'Nice one!',
-        u'Love that lighting so much.',
-        u'Amazing work!',
-        u'ON FIRE! 100/100!',
-        u'Lovely!',
-        u'great content!',
-        u'Great content!!',
-        u'awesome content!!!',
-        u'Awesome content!!',
-        u'100/100 love it!',
-        u'This is just incredible :^)',
-        u'amazing shot!']
-
 hashtags = ['#landscapepainting',
-        '#landscapelovers',
-        '#landscapephotography',
-        '#artstation']
+        '#artstation',
+        '#digitalpainting',
+        '#conceptart']
 
 # the screen coordinates after
 user_profile_coords=[
@@ -109,6 +85,7 @@ class Adam():
         self.total_liked = 0
         self.total_skipped = 0
         self.total_interacted = 0
+        self.total_commented = 0
 
         # internal trackers for current run (reset every run)
         self.liked = 0
@@ -281,7 +258,8 @@ class Adam():
             self.rsleep(1)
 
             # randomly commenting + random sleep to simulate typing
-            ahk.type(comments[random.randint(0, len(comments) - 1)])
+            comment = np.random.choice(comments, replace=False) # without replacement to avoid duplicated comments during one runtime
+            ahk.type(comment)
             self.rsleep(6)
 
             # press enter to send
@@ -380,6 +358,7 @@ class Adam():
         self.total_liked += self.liked
         self.total_skipped += self.skipped
         self.total_interacted += self.interacted
+        self.total_commented += self.commented
 
         ## reset trackers for the next run
         self.reset()
@@ -395,7 +374,7 @@ if __name__ == '__main__':
     adam = Adam(likes=25, random_offset_yn=True, hp_interaction=True)
     adam.set_like(50, 80)
     adam.set_interact(True, 10, 20)
-    adam.set_comment(True, 0, 0)
+    adam.set_comment(True, 2, 5)
     # adam.set_interact(True, 100, 100) # TESTING
     # adam.set_comment(True, 100, 100) # TESTING
 
